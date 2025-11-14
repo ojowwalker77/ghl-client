@@ -15,7 +15,7 @@ A strongly-typed GoHighLevel API client built with **Bun** and **TypeBox** for r
 ## Installation
 
 ```bash
-bun add @pixel/ghl-client
+bun add @ojowwalker/ghl-client
 ```
 
 ## Quick Start
