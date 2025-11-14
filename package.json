@@ -1,0 +1,47 @@
+{
+  "name": "@ojowwalker/ghl-client",
+  "version": "0.1.0",
+  "description": "Strongly-typed GoHighLevel API client built with Bun and TypeBox",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --format esm && bun run build:types",
+    "build:types": "tsc --emitDeclarationOnly --declaration --declarationMap",
+    "dev": "bun --watch src/index.ts",
+    "test": "bun test",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "gohighlevel",
+    "highlevel",
+    "crm",
+    "api-client",
+    "typescript",
+    "typebox",
+    "bun"
+  ],
+  "author": "ojowwalker",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.24"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14",
+    "typescript": "^5.7.2"
+  },
+  "peerDependencies": {
+    "bun": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
