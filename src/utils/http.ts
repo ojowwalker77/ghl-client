@@ -20,7 +20,8 @@ export class HttpClientError extends Error {
     message: string,
     public statusCode?: number,
     public response?: any,
-    public shouldRetry: boolean = false
+    public shouldRetry: boolean = false,
+    public retryAfter?: number // Milliseconds to wait before retry (for rate limits)
   ) {
     super(message);
     this.name = 'HttpClientError';
@@ -236,12 +237,39 @@ export class HttpClient {
     // Check if it's an auth error (don't retry)
     const isAuthError = response.status === 401 || response.status === 403;
 
+    // Check if it's a rate limit error
+    const isRateLimited = response.status === 429;
+    let retryAfter: number | undefined;
+
+    if (isRateLimited) {
+      // Parse Retry-After header (can be in seconds or HTTP date)
+      const retryAfterHeader = response.headers.get('Retry-After');
+      if (retryAfterHeader) {
+        // Try parsing as integer (seconds)
+        const seconds = parseInt(retryAfterHeader, 10);
+        if (!isNaN(seconds)) {
+          retryAfter = seconds * 1000; // Convert to milliseconds
+        } else {
+          // Try parsing as HTTP date
+          const retryDate = new Date(retryAfterHeader);
+          if (!isNaN(retryDate.getTime())) {
+            retryAfter = Math.max(0, retryDate.getTime() - Date.now());
+          }
+        }
+      }
+      // Default to 1 second if no Retry-After header
+      if (!retryAfter) {
+        retryAfter = 1000;
+      }
+    }
+
     // Throw HttpClientError
     throw new HttpClientError(
       errorData?.message || `HTTP ${response.status}: ${response.statusText}`,
       response.status,
       errorData,
-      !isAuthError && response.status >= 500 // Retry on 5xx errors
+      !isAuthError && (response.status >= 500 || isRateLimited), // Retry on 5xx or 429
+      retryAfter
     );
   }
 

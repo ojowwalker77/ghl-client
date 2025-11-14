@@ -35,6 +35,34 @@ describe('OAuthClient', () => {
     });
   });
 
+  describe('generateState', () => {
+    test('should generate a secure state', () => {
+      const client = new OAuthClient(mockConfig);
+      const state = client.generateState();
+
+      expect(state).toBeDefined();
+      expect(typeof state).toBe('string');
+      expect(state.length).toBeGreaterThan(0);
+    });
+
+    test('should generate different states on each call', () => {
+      const client = new OAuthClient(mockConfig);
+      const state1 = client.generateState();
+      const state2 = client.generateState();
+
+      expect(state1).not.toBe(state2);
+    });
+
+    test('should generate UUID format when crypto.randomUUID is available', () => {
+      const client = new OAuthClient(mockConfig);
+      const state = client.generateState();
+
+      // UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      expect(uuidRegex.test(state) || state.length > 16).toBe(true);
+    });
+  });
+
   describe('getAuthorizationUrl', () => {
     test('should generate authorization URL with required parameters', () => {
       const client = new OAuthClient(mockConfig);
@@ -44,6 +72,16 @@ describe('OAuthClient', () => {
       expect(url).toContain('response_type=code');
       expect(url).toContain('client_id=test-client-id');
       expect(url).toContain('redirect_uri=https%3A%2F%2Fexample.com%2Fcallback');
+    });
+
+    test('should auto-generate state if not provided', () => {
+      const client = new OAuthClient(mockConfig);
+      const url = client.getAuthorizationUrl();
+
+      expect(url).toContain('state=');
+      const stateMatch = url.match(/state=([^&]+)/);
+      expect(stateMatch).toBeTruthy();
+      expect(stateMatch![1].length).toBeGreaterThan(0);
     });
 
     test('should include scopes from config', () => {

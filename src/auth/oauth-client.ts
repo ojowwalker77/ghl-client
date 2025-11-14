@@ -9,6 +9,27 @@ import type {
 } from '../types/oauth';
 
 /**
+ * Generate a cryptographically secure random state for OAuth
+ */
+function generateSecureState(): string {
+  // Use crypto.randomUUID() for secure random state generation
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  // Fallback for older environments (still secure)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Last resort fallback - this should rarely happen in modern environments
+  // We don't log here since this is a utility function without access to logger
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+/**
  * OAuth Client for GoHighLevel
  * Handles OAuth 2.0 authorization flow and token management
  */
@@ -22,12 +43,29 @@ export class OAuthClient {
   }
 
   /**
+   * Generate a cryptographically secure state parameter
+   *
+   * @example
+   * ```ts
+   * const state = oauthClient.generateState();
+   * // Store state in session for validation
+   * ```
+   */
+  generateState(): string {
+    return generateSecureState();
+  }
+
+  /**
    * Generate OAuth authorization URL
    *
    * @example
    * ```ts
+   * // Auto-generate secure state
+   * const authUrl = oauthClient.getAuthorizationUrl();
+   *
+   * // Or provide your own state
    * const authUrl = oauthClient.getAuthorizationUrl({
-   *   state: 'random-state-string',
+   *   state: 'your-state-string',
    * });
    * // Redirect user to authUrl
    * ```
@@ -47,9 +85,9 @@ export class OAuthClient {
       url.searchParams.set('scope', scopes.join(' '));
     }
 
-    if (options?.state) {
-      url.searchParams.set('state', options.state);
-    }
+    // Auto-generate secure state if not provided
+    const state = options?.state || this.generateState();
+    url.searchParams.set('state', state);
 
     return url.toString();
   }

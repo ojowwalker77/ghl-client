@@ -96,6 +96,7 @@ export type {
 // Utilities
 export { HttpClient, HttpClientError, ValidationError, type HttpClientConfig } from './utils/http';
 export { withRetry, createRetryWrapper, type RetryConfig } from './utils/retry';
+export { type Logger, NoopLogger, ConsoleLogger } from './utils/logger';
 
 // TypeBox schemas (for advanced usage)
 export {

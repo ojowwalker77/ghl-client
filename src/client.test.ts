@@ -117,9 +117,9 @@ describe('GHLClient', () => {
     });
 
     test('should enable debug mode', () => {
-      const consoleLogSpy = mock(() => {});
-      const originalLog = console.log;
-      console.log = consoleLogSpy;
+      const consoleInfoSpy = mock(() => {});
+      const originalInfo = console.info;
+      console.info = consoleInfoSpy;
 
       const client = new GHLClient({
         auth: {
@@ -129,10 +129,10 @@ describe('GHLClient', () => {
         debug: true,
       });
 
-      // Debug log should be called during initialization
-      expect(consoleLogSpy).toHaveBeenCalled();
+      // Info log should be called during initialization
+      expect(consoleInfoSpy).toHaveBeenCalled();
 
-      console.log = originalLog;
+      console.info = originalInfo;
     });
   });
 
@@ -347,10 +347,10 @@ describe('GHLClient', () => {
   });
 
   describe('log', () => {
-    test('should not log when debug is disabled', () => {
-      const consoleLogSpy = mock(() => {});
-      const originalLog = console.log;
-      console.log = consoleLogSpy;
+    test('should not log when debug is disabled (NoopLogger)', () => {
+      const consoleDebugSpy = mock(() => {});
+      const originalDebug = console.debug;
+      console.debug = consoleDebugSpy;
 
       const client = new GHLClient({
         auth: {
@@ -361,19 +361,19 @@ describe('GHLClient', () => {
       });
 
       // Clear calls from constructor
-      consoleLogSpy.mockClear();
+      consoleDebugSpy.mockClear();
 
       client.log('Test message', { data: 'test' });
 
-      expect(consoleLogSpy).not.toHaveBeenCalled();
+      expect(consoleDebugSpy).not.toHaveBeenCalled();
 
-      console.log = originalLog;
+      console.debug = originalDebug;
     });
 
-    test('should log when debug is enabled', () => {
-      const consoleLogSpy = mock(() => {});
-      const originalLog = console.log;
-      console.log = consoleLogSpy;
+    test('should log when debug is enabled (ConsoleLogger)', () => {
+      const consoleDebugSpy = mock(() => {});
+      const originalDebug = console.debug;
+      console.debug = consoleDebugSpy;
 
       const client = new GHLClient({
         auth: {
@@ -384,13 +384,34 @@ describe('GHLClient', () => {
       });
 
       // Clear calls from constructor
-      consoleLogSpy.mockClear();
+      consoleDebugSpy.mockClear();
 
       client.log('Test message', { data: 'test' });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('[GHLClient] Test message', { data: 'test' });
+      expect(consoleDebugSpy).toHaveBeenCalledWith('[GHLClient] Test message', { data: 'test' });
 
-      console.log = originalLog;
+      console.debug = originalDebug;
+    });
+
+    test('should use custom logger when provided', () => {
+      const customLogger = {
+        debug: mock(() => {}),
+        info: mock(() => {}),
+        warn: mock(() => {}),
+        error: mock(() => {}),
+      };
+
+      const client = new GHLClient({
+        auth: {
+          type: 'api-key',
+          apiKey: 'test-key',
+        },
+        logger: customLogger,
+      });
+
+      client.log('Test message', { data: 'test' });
+
+      expect(customLogger.debug).toHaveBeenCalledWith('Test message', { data: 'test' });
     });
   });
 

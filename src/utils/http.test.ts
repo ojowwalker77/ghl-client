@@ -465,4 +465,114 @@ describe('HttpClient', () => {
       expect(result).toBe('OK');
     });
   });
+
+  describe('Rate limiting', () => {
+    test('should mark 429 errors as retryable', async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: { 'content-type': 'application/json' },
+        })
+      );
+
+      const client = new HttpClient({ baseUrl: 'https://api.example.com' });
+
+      try {
+        await client.get('/users');
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpClientError);
+        expect((error as HttpClientError).statusCode).toBe(429);
+        expect((error as HttpClientError).shouldRetry).toBe(true);
+      }
+    });
+
+    test('should parse Retry-After header in seconds', async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: {
+            'content-type': 'application/json',
+            'Retry-After': '60', // 60 seconds
+          },
+        })
+      );
+
+      const client = new HttpClient({ baseUrl: 'https://api.example.com' });
+
+      try {
+        await client.get('/users');
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpClientError);
+        expect((error as HttpClientError).retryAfter).toBe(60000); // 60 seconds in ms
+      }
+    });
+
+    test('should parse Retry-After header as HTTP date', async () => {
+      const retryDate = new Date(Date.now() + 120000); // 2 minutes from now
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: {
+            'content-type': 'application/json',
+            'Retry-After': retryDate.toUTCString(),
+          },
+        })
+      );
+
+      const client = new HttpClient({ baseUrl: 'https://api.example.com' });
+
+      try {
+        await client.get('/users');
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpClientError);
+        const retryAfter = (error as HttpClientError).retryAfter!;
+        expect(retryAfter).toBeGreaterThan(115000); // At least 115 seconds
+        expect(retryAfter).toBeLessThan(125000); // At most 125 seconds
+      }
+    });
+
+    test('should default to 1 second if no Retry-After header', async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: { 'content-type': 'application/json' },
+        })
+      );
+
+      const client = new HttpClient({ baseUrl: 'https://api.example.com' });
+
+      try {
+        await client.get('/users');
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpClientError);
+        expect((error as HttpClientError).retryAfter).toBe(1000); // 1 second default
+      }
+    });
+
+    test('should handle invalid Retry-After header gracefully', async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: {
+            'content-type': 'application/json',
+            'Retry-After': 'invalid',
+          },
+        })
+      );
+
+      const client = new HttpClient({ baseUrl: 'https://api.example.com' });
+
+      try {
+        await client.get('/users');
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpClientError);
+        expect((error as HttpClientError).retryAfter).toBe(1000); // Fallback to default
+      }
+    });
+  });
 });

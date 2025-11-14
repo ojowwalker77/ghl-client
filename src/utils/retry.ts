@@ -34,8 +34,14 @@ function calculateDelay(
   attempt: number,
   initialDelay: number,
   exponentialBase: number,
-  maxDelay: number
+  maxDelay: number,
+  retryAfter?: number
 ): number {
+  // If retryAfter is specified (e.g., from rate limit), use it
+  if (retryAfter !== undefined) {
+    return Math.min(retryAfter, maxDelay);
+  }
+
   const delay = initialDelay * Math.pow(exponentialBase, attempt - 1);
   return Math.min(delay, maxDelay);
 }
@@ -77,7 +83,9 @@ export async function withRetry<T>(
     try {
       // Wait before retry (skip on first attempt)
       if (attempt > 1) {
-        const delay = calculateDelay(attempt - 1, initialDelay, exponentialBase, maxDelay);
+        // Extract retryAfter from error if available (for rate limiting)
+        const retryAfter = lastError?.retryAfter;
+        const delay = calculateDelay(attempt - 1, initialDelay, exponentialBase, maxDelay, retryAfter);
         onRetry(lastError, attempt - 1, delay);
         await sleep(delay);
       }

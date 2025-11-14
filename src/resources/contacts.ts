@@ -31,17 +31,36 @@ export class ContactsResource {
   async get(contactId: string): Promise<Contact> {
     this.client.log('Getting contact', { contactId });
 
-    const response = await this.client.withRetry(() =>
-      this.client.getHttpClient().get<{ contact: Contact }>(
-        `/contacts/${contactId}`,
-        {
-          headers: this.client.buildAuthHeaders(),
-          responseSchema: ContactResponseSchema,
-        }
-      )
-    );
+    try {
+      const response = await this.client.withRetry(() =>
+        this.client.getHttpClient().get<{ contact: Contact }>(
+          `/contacts/${contactId}`,
+          {
+            headers: this.client.buildAuthHeaders(),
+            responseSchema: ContactResponseSchema,
+          }
+        )
+      );
 
-    return response.contact;
+      this.client.audit({
+        operation: 'read',
+        resourceType: 'contact',
+        resourceId: contactId,
+        locationId: response.contact.locationId,
+        success: true,
+      });
+
+      return response.contact;
+    } catch (error) {
+      this.client.audit({
+        operation: 'read',
+        resourceType: 'contact',
+        resourceId: contactId,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   /**
@@ -60,18 +79,41 @@ export class ContactsResource {
   async create(data: CreateContactRequest): Promise<Contact> {
     this.client.log('Creating contact', data);
 
-    const response = await this.client.withRetry(() =>
-      this.client.getHttpClient().post<{ contact: Contact }>(
-        '/contacts/',
-        {
-          body: data,
-          headers: this.client.buildAuthHeaders(),
-          responseSchema: ContactResponseSchema,
-        }
-      )
-    );
+    try {
+      const response = await this.client.withRetry(() =>
+        this.client.getHttpClient().post<{ contact: Contact }>(
+          '/contacts/',
+          {
+            body: data,
+            headers: this.client.buildAuthHeaders(),
+            responseSchema: ContactResponseSchema,
+          }
+        )
+      );
 
-    return response.contact;
+      this.client.audit({
+        operation: 'create',
+        resourceType: 'contact',
+        resourceId: response.contact.id,
+        locationId: data.locationId,
+        success: true,
+        metadata: {
+          email: data.email,
+          phone: data.phone,
+        },
+      });
+
+      return response.contact;
+    } catch (error) {
+      this.client.audit({
+        operation: 'create',
+        resourceType: 'contact',
+        locationId: data.locationId,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   /**
@@ -87,18 +129,37 @@ export class ContactsResource {
   async update(contactId: string, data: UpdateContactRequest): Promise<Contact> {
     this.client.log('Updating contact', { contactId, data });
 
-    const response = await this.client.withRetry(() =>
-      this.client.getHttpClient().put<{ contact: Contact }>(
-        `/contacts/${contactId}`,
-        {
-          body: data,
-          headers: this.client.buildAuthHeaders(),
-          responseSchema: ContactResponseSchema,
-        }
-      )
-    );
+    try {
+      const response = await this.client.withRetry(() =>
+        this.client.getHttpClient().put<{ contact: Contact }>(
+          `/contacts/${contactId}`,
+          {
+            body: data,
+            headers: this.client.buildAuthHeaders(),
+            responseSchema: ContactResponseSchema,
+          }
+        )
+      );
 
-    return response.contact;
+      this.client.audit({
+        operation: 'update',
+        resourceType: 'contact',
+        resourceId: contactId,
+        locationId: response.contact.locationId,
+        success: true,
+      });
+
+      return response.contact;
+    } catch (error) {
+      this.client.audit({
+        operation: 'update',
+        resourceType: 'contact',
+        resourceId: contactId,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   /**
@@ -112,14 +173,32 @@ export class ContactsResource {
   async delete(contactId: string): Promise<void> {
     this.client.log('Deleting contact', { contactId });
 
-    await this.client.withRetry(() =>
-      this.client.getHttpClient().delete(
-        `/contacts/${contactId}`,
-        {
-          headers: this.client.buildAuthHeaders(),
-        }
-      )
-    );
+    try {
+      await this.client.withRetry(() =>
+        this.client.getHttpClient().delete(
+          `/contacts/${contactId}`,
+          {
+            headers: this.client.buildAuthHeaders(),
+          }
+        )
+      );
+
+      this.client.audit({
+        operation: 'delete',
+        resourceType: 'contact',
+        resourceId: contactId,
+        success: true,
+      });
+    } catch (error) {
+      this.client.audit({
+        operation: 'delete',
+        resourceType: 'contact',
+        resourceId: contactId,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   /**
