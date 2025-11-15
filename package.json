@@ -30,7 +30,6 @@
   ],
   "author": "ojowwalker",
   "license": "MIT",
-  "private": true,
   "dependencies": {
     "@sinclair/typebox": "^0.34.24"
   },

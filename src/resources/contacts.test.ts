@@ -17,6 +17,7 @@ function createMockClient() {
     withRetry: mock(async (fn: any) => await fn()),
     buildAuthHeaders: mock(() => ({ Authorization: 'Bearer test-token' })),
     log: mock(() => {}),
+    audit: mock(() => {}),
   } as unknown as GHLClient;
 
   return { client, httpClient };

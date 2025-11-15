@@ -1,6 +1,6 @@
 import { HttpClient } from './utils/http';
 import { withRetry, type RetryConfig } from './utils/retry';
-import type { AuthConfig, OAuthAuthConfig } from './auth/types';
+import type { AuthConfig, OAuthAuth } from './auth/types';
 import { isApiKeyAuth, isOAuthAuth } from './auth/types';
 import { ContactsResource } from './resources/contacts';
 import { OpportunitiesResource } from './resources/opportunities';
@@ -219,7 +219,7 @@ export class GHLClient {
     try {
       const newTokens = await this.oauthClient.refreshToken(this.auth.refreshToken);
 
-      const newAuth: OAuthAuthConfig = {
+      const newAuth: OAuthAuth = {
         type: 'oauth',
         accessToken: newTokens.access_token,
         refreshToken: newTokens.refresh_token || this.auth.refreshToken,
@@ -234,11 +234,14 @@ export class GHLClient {
 
       // Call onTokenRefresh callback if provided
       if (this.auth.onTokenRefresh) {
-        this.auth.onTokenRefresh({
-          accessToken: newTokens.access_token,
-          refreshToken: newTokens.refresh_token || this.auth.refreshToken,
-          expiresAt: newAuth.expiresAt!,
-        });
+        const refreshToken = newTokens.refresh_token || this.auth.refreshToken;
+        if (refreshToken) {
+          this.auth.onTokenRefresh({
+            accessToken: newTokens.access_token,
+            refreshToken,
+            expiresAt: newAuth.expiresAt!,
+          });
+        }
       }
 
       this.logger.info('OAuth token refreshed successfully');
