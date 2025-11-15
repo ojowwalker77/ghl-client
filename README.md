@@ -1,4 +1,4 @@
-# @pixel/ghl-client
+# @ojowwalker/ghl-client
 
 A strongly-typed GoHighLevel API client built with **Bun** and **TypeBox** for runtime validation and compile-time type safety.
 
