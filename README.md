@@ -23,7 +23,7 @@ bun add @ojowwalker/ghl-client
 ### API Key Authentication
 
 ```typescript
-import { GHLClient } from '@pixel/ghl-client';
+import { GHLClient } from '@ojowwalker/ghl-client';
 
 const client = new GHLClient({
   auth: {
@@ -53,7 +53,7 @@ const opportunity = await client.opportunities.create({
 ### OAuth 2.0 Authentication
 
 ```typescript
-import { GHLClient, OAuthClient } from '@pixel/ghl-client';
+import { GHLClient, OAuthClient } from '@ojowwalker/ghl-client';
 
 // Step 1: Create OAuth client
 const oauthClient = new OAuthClient({
@@ -318,7 +318,7 @@ All API request/response types are backed by TypeBox schemas for runtime validat
 
 ```typescript
 import { Value } from '@sinclair/typebox/value';
-import { ContactSchema } from '@pixel/ghl-client';
+import { ContactSchema } from '@ojowwalker/ghl-client';
 
 // Validate data against schema
 const isValid = Value.Check(ContactSchema, someData);
@@ -330,7 +330,7 @@ const errors = [...Value.Errors(ContactSchema, someData)];
 ## Error Handling
 
 ```typescript
-import { HttpClientError, ValidationError } from '@pixel/ghl-client';
+import { HttpClientError, ValidationError } from '@ojowwalker/ghl-client';
 
 try {
   const contact = await client.contacts.get('contact-id');
@@ -414,7 +414,7 @@ import type {
   PipelineStage,
   OpportunityStatus,
   CustomFields,
-} from '@pixel/ghl-client';
+} from '@ojowwalker/ghl-client';
 
 // All types are fully typed and documented
 const contact: Contact = {
