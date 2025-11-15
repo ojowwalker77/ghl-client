@@ -22,6 +22,7 @@ function createMockClient(locationId?: string) {
     withRetry: mock(async (fn: any) => await fn()),
     buildAuthHeaders: mock(() => ({ Authorization: 'Bearer test-token' })),
     log: mock(() => {}),
+    audit: mock(() => {}),
     requireLocationId: mock((locId?: string) => {
       const id = locId ?? locationId;
       if (!id) throw new Error('Location ID required');

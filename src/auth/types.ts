@@ -23,6 +23,9 @@ export interface OAuthAuth {
   accessToken: string;
   refreshToken?: string;
   expiresAt?: number;
+  clientId?: string;
+  clientSecret?: string;
+  redirectUri?: string;
   onTokenRefresh?: (tokens: { accessToken: string; refreshToken: string; expiresAt: number }) => void | Promise<void>;
 }
 
