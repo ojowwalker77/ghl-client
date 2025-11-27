@@ -1,0 +1,19 @@
+# Source files
+src/
+*.test.ts
+*.spec.ts
+
+# Config files
+.github/
+.gitignore
+tsconfig.json
+bun.lock
+
+# Examples and docs
+examples/
+REFERENCE.md
+
+# Build artifacts (keep dist/)
+node_modules/
+*.log
+.DS_Store

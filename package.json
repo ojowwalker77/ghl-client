@@ -11,14 +11,29 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target node --format esm && bun run build:types",
     "build:types": "tsc --emitDeclarationOnly --declaration --declarationMap",
+    "prepublishOnly": "bun run typecheck && bun test && bun run build",
     "dev": "bun --watch src/index.ts",
     "test": "bun test",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ojowwalker77/ghl-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ojowwalker77/ghl-client/issues"
+  },
+  "homepage": "https://github.com/ojowwalker77/ghl-client#readme",
   "keywords": [
     "gohighlevel",
     "highlevel",
